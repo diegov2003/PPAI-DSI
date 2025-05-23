@@ -9,4 +9,4 @@ class EstacionSismologica {
         this.nroCertificacionAdquisicion = nroCertificacionAdquisicion;
     }
 }
-module.exports = EstacionSismologica;
+export default EstacionSismologica;

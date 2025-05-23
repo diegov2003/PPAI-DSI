@@ -5,6 +5,14 @@ class Sismografo {
         this.nroSerie = nroSerie;
         this.estacionSismologica = estacionSismologica;
     }
+    getIdentificadorSismografo() {
+        return this.identificadorSismofrafo;
+    }
+    setEstadoActual() {
+        if (this.cambioDeEstadoActual) {
+            this.cambioDeEstadoActual.finalizar();
+        }
+    }
 }
-module.exports = Sismografo;
+export default Sismografo;
 

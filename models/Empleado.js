@@ -7,4 +7,4 @@ class Empleado {
         this.usuario = usuario;
     }
 }
-module.exports = Empleado;
+export default Empleado;

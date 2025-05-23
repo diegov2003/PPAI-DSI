@@ -6,5 +6,14 @@ class SerieTemporal {
         this.frecuenciaMuestreo = frecuenciaMuestreo;
         this.muestras = [];
     }
+    getDatos() {
+        return {
+            condicionAlarma: this.condicionAlarma,
+            fechaHoraInicioRegistroMuestras: this.fechaHoraInicioRegistroMuestras,
+            fechaHoraRegistro: this.fechaHoraRegistro,
+            frecuenciaMuestreo: this.frecuenciaMuestreo,
+            muestras: this.muestras
+        };
+    }
 }
-module.exports = SerieTemporal;
+export default SerieTemporal;

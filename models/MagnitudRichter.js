@@ -4,4 +4,4 @@ class MagnitudRichter {
         this.numero = numero;
     }
 }
-module.exports = MagnitudRichter;
+export default MagnitudRichter;

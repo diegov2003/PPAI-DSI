@@ -11,4 +11,4 @@ class EventoSismico {
         this.seriesTemporales = [];
     }
 }
-module.exports = EventoSismico;
+export default EventoSismico;

@@ -5,5 +5,14 @@ class CambioDeEstado {
         this.estado = estado;
         this.empleado = null;
     }
+    esEstadoActual() {
+        return this.fechaHoraFin === null || this.fechaHoraFin === undefined;
+    }
+    setFechaHoraFin(fechaHoraFin) {
+        this.fechaHoraFin = fechaHoraFin;
+    }
+    new() {
+        return new CambioDeEstado(this.fechaHoraInicio, this.fechaHoraFin, this.estado);
+    }
 }
-module.exports = CambioDeEstado;
+export default CambioDeEstado;

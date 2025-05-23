@@ -5,4 +5,4 @@ class Clasificacion {
         this.kmProfundidadHasta = kmProfundidadHasta;
     }
 }
-module.exports = Clasificacion;
+export default Clasificacion;

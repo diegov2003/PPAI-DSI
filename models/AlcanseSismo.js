@@ -5,5 +5,6 @@ class AlcanceSismo {
         this.nombre = nombre;
     }
 }
-module.exports = AlcanceSismo;
+export default AlcanceSismo;
+
 

@@ -4,4 +4,4 @@ class OrigenGeneracion {
         this.nombre = nombre;
     }
 }
-module.exports = OrigenGeneracion;
+export default OrigenGeneracion;
