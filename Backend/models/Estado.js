@@ -1,6 +1,6 @@
 class Estado {
     constructor(ambito, nombreEstado) {
-        this.ambito = ambito;
+        this.ambito = ambito;  //?????? QUE ES AMBITO
         this.nombreEstado = nombreEstado;
     }
     esBloqueadoEnRevision() {
