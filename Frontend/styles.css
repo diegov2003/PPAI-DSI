@@ -96,10 +96,8 @@ p,h1,h2 {
 } 
 
 #volver{
-  position: relative;
-  top: -10rem;
-  left: 6rem;
-  width: 100%;
+  position: fixed;
+  top: 4.5rem;
   font-size: 1.2rem;
   background-color: #727272;
   border-radius: 7px;
@@ -109,3 +107,192 @@ p,h1,h2 {
   padding: 1rem;
 } 
 
+
+/* ===== ESTILOS ESPECÍFICOS PARA DATOSSISMO.HTML ===== */
+
+.sismo-body {
+  background-color: #121212 !important;
+  display: block !important;
+  margin-top: 0 !important;
+  padding-top: 80px;
+}
+
+#sismo-page-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+#sismo-nav {
+  background-color: rgba(0, 0, 0, 0.8) !important;
+  padding: 10px 20px;
+}
+
+#sismo-boton-nav {
+  background-color: #2d7fd6;
+}
+
+#sismo-main-content {
+  background-color: #1e1e1e;
+  border-radius: 10px;
+  padding: 25px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+#datos-sismo-container {
+  color: #e0e0e0 !important; /* Color base para todo el texto */
+}
+
+#datos-sismo-container th {
+  color: #2d7fd6 !important; /* Azul para encabezados */
+}
+
+/* Contenedor principal de datos */
+#datos-sismo-container .datos-container {
+  background-color: #2a2a2a;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+/* Títulos */
+#datos-sismo-container .titulo-principal {
+  color: #2d7fd6 !important;
+  font-size: 1.8rem;
+  margin-bottom: 25px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #2d7fd6;
+  background-color: #333;
+}
+
+#datos-sismo-container .subtitulo {
+  color: #2d7fd6 !important; /* Azul claro */
+  font-size: 1.3rem;
+  margin: 30px 0 15px 0;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #3d566e;
+}
+
+/* Tablas */
+#datos-sismo-container .tabla-datos {
+  width: 100%;
+  background-color: #333;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 25px;
+}
+
+#datos-sismo-container .tabla-datos th {
+  background-color: #252525;
+  color: #2d7fd6;
+  padding: 12px 15px;
+  text-align: left;
+  width: 30%;
+}
+
+#datos-sismo-container .tabla-datos td {
+  padding: 12px 15px;
+  background-color: #333;
+  color: #eee;
+  border-top: 1px solid #444;
+}
+
+/* Botones */
+#datos-sismo-container .boton {
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: bold;
+  transition: all 0.3s;
+  margin: 5px;
+}
+
+#datos-sismo-container .accion-primaria {
+  background-color: #2d7fd6;
+  color: white;
+}
+
+#datos-sismo-container .accion-confirmar {
+  background-color: #28a745;
+  color: white;
+}
+
+#datos-sismo-container .accion-rechazar {
+  background-color: #dc3545;
+  color: white;
+}
+
+#datos-sismo-container .accion-revision {
+  background-color: #ffc107;
+  color: #212529;
+}
+
+#datos-sismo-container .volver {
+  background-color: #6c757d;
+  color: white;
+}
+
+#datos-sismo-container .boton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  opacity: 0.9;
+}
+
+/* Panel de acciones */
+#datos-sismo-container .panel-acciones {
+  background-color: #252525;
+  padding: 20px;
+  border-radius: 8px;
+  margin-top: 30px;
+}
+
+/* Series temporales */
+#datos-sismo-container .tabla-series {
+  width: 100%;
+  background-color: #333;
+  margin: 15px 0;
+}
+
+#datos-sismo-container .tabla-series th {
+  background-color: #252525;
+  color: #2d7fd6;
+  padding: 10px;
+}
+
+#datos-sismo-container .tabla-series td {
+  padding: 8px 10px;
+  border-top: 1px solid #444;
+}
+
+
+
+.no-data {
+  background-color: #2a2a2a;
+  color: #ccc;
+  padding: 15px;
+  border-radius: 5px;
+  text-align: center;
+  margin: 20px 0;
+}
+
+.serie-temporal {
+  margin-bottom: 30px;
+  background-color: #2a2a2a;
+  padding: 15px;
+  border-radius: 5px;
+}
+
+.serie-temporal table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.serie-temporal th, .serie-temporal td {
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid #444;
+}
+
+.serie-temporal th {
+  background-color: #333;
+  color: #2d7fd6;
+}

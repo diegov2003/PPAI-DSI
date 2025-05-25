@@ -6,5 +6,13 @@ class Empleado {
         this.telefono = telefono;
         this.usuario = usuario;
     }
+
+    getNombre(){
+        return this.nombre;
+    }
+
+    esTuUsuario(){
+
+    }
 }
 export default Empleado;
