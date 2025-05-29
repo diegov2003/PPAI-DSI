@@ -1,17 +1,34 @@
-class PantallaRegistrarResultadoRevision {
+class PantallaDeRevisionManual {
     constructor() {
         this.gestor = null;
+        this.visualizacionSeleccionada = false;
+        this.modificacionSeleccionada = false;
+        this.accionSeleccionada = null;
     }
 
     setGestor(gestor) {
         this.gestor = gestor;
     }
 
+    // Mantener iniciarCU para compatibilidad pero que llame al método correcto
     iniciarCU() {
-        this.mostrarEventos();
+        this.opRegistrarResultadoDeRevisionManual();
     }
 
-    mostrarEventos() {
+    // Método inicial del CU
+    opRegistrarResultadoDeRevisionManual() {
+        this.habilitarPantalla();
+        this.mostrarEventosSismicosAutodetectados();
+    }
+
+    // Habilita la pantalla para interacción
+    habilitarPantalla() {
+        // La lógica de habilitación ya está implícita en la carga de la página
+        console.log("Pantalla habilitada para interacción");
+    }
+
+    // Muestra la lista de eventos sísmicos autodetectados
+    mostrarEventosSismicosAutodetectados() {
         const eventos = this.gestor.buscarEventosAutodetectados();
         
         const eventosLista = document.getElementById("eventos-lista");
@@ -65,26 +82,29 @@ class PantallaRegistrarResultadoRevision {
         html += `</tbody></table>`;
         eventosLista.innerHTML = html;
 
-        this.habilitarBotones();
+        this.solicitarSeleccionDeEvento();
     }
 
-    habilitarBotones() {
+    // Configura los listeners para la selección de evento
+    solicitarSeleccionDeEvento() {
         document.querySelectorAll(".btn-revisar").forEach((btn) => {
             btn.addEventListener("click", (e) => {
                 const eventoId = e.target.getAttribute("data-id");
-                // Primero seleccionamos el evento
-                this.gestor.seleccionarEvento(eventoId);
-                // Luego redirigimos a la página de detalles
-                window.location.href = `datosSismo.html?id=${eventoId}`;
+                this.iniciarSeleccionDeEvento(eventoId);
             });
         });
     }
 
-    mostrarDatosSismo(datosEvento) {
+    // Inicia el proceso de selección de un evento
+    iniciarSeleccionDeEvento(eventoId) {
+        this.gestor.seleccionarEvento(eventoId);
+        window.location.href = `datosSismo.html?id=${eventoId}`;
+    }
+
+    // Muestra los datos detallados del evento sísmico
+    mostrarDatosDelEventoSismico(datosEvento) {
         const container = document.getElementById("datos-sismo-container");
-        if (!container) {
-            return;
-        }
+        if (!container) return;
 
         container.innerHTML = `
             <div class="datos-container">
@@ -97,7 +117,7 @@ class PantallaRegistrarResultadoRevision {
                             <th>ID Evento</th>
                             <td>${datosEvento.id}</td>
                             <th>Fecha y Hora</th>
-                            <td>${new Date(datosEvento.fechaHora).toLocaleString()}</td>
+                            <td>${datosEvento.fechaHora}</td>
                         </tr>
                         <tr>
                             <th>Magnitud</th>
@@ -151,7 +171,7 @@ class PantallaRegistrarResultadoRevision {
                             <button id="btn-rechazar" class="boton accion-rechazar">
                                 <span class="icono"></span> Rechazar evento
                             </button>
-                            <button id="btn-revision" class="boton accion-revision" disabled>
+                            <button id="btn-revision" class="boton accion-revision">
                                 <span class="icono"></span> Revisión por experto
                             </button>
                         </div>
@@ -164,27 +184,81 @@ class PantallaRegistrarResultadoRevision {
             </div>
         `;
 
-        this.habilitarBotonesDetalle();
+        this.configurarEventosUI();
     }
 
-    habilitarBotonesDetalle() {
-        document.getElementById("btn-rechazar")?.addEventListener("click", () => {
-            this.gestor.rechazarEvento();
-        });
-
-        document.getElementById("btn-volver")?.addEventListener("click", () => {
-            window.location.href = "eventos.html";
-        });
-
+    // Configura todos los eventos de la UI
+    configurarEventosUI() {
+        // Configurar botón de generar sismograma
         document.getElementById("btn-generar-sismograma")?.addEventListener("click", () => {
-            this.gestor.generarSismograma();
+            this.solicitarSeleccionOpcionVisualizacion();
+        });
+
+        // Configurar botón de rechazar
+        document.getElementById("btn-rechazar")?.addEventListener("click", () => {
+            this.tomarSeleccionRechazarEvento();
+        });
+
+        // Configurar botón de volver
+        document.getElementById("btn-volver")?.addEventListener("click", () => {
+            this.tomarSeleccionNoVisualizar();
+        });
+
+        // Configurar botón de confirmar
+        document.getElementById("btn-confirmar")?.addEventListener("click", () => {
+            this.tomarSeleccionNoModificar();
+        });
+
+        // Configurar botón de revisión
+        document.getElementById("btn-revision")?.addEventListener("click", () => {
+            this.tomarSeleccionReclamarEvento();
         });
     }
 
+    // Solicita al usuario que seleccione si desea visualizar el sismograma
+    solicitarSeleccionOpcionVisualizacion() {
+        this.visualizacionSeleccionada = true;
+        if (this.gestor.generarSismograma()) {
+            this.mostrarBotonVisualizarSismograma();
+        }
+    }
+
+    // Maneja la selección de no visualizar el sismograma
+    tomarSeleccionNoVisualizar() {
+        window.location.href = "eventos.html";
+    }
+
+    // Solicita al usuario que seleccione una acción
+    solicitarSeleccionDeAccion() {
+        // Esta funcionalidad está implícita en los botones de acción
+        console.log("Esperando selección de acción del usuario");
+    }
+
+    // Maneja la selección de no modificar el evento
+    tomarSeleccionNoModificar() {
+        this.accionSeleccionada = "confirmar";
+        // Implementar lógica de confirmación
+        this.mostrarMensaje("Funcionalidad de confirmación pendiente de implementar");
+    }
+
+    // Maneja la selección de rechazar el evento
+    tomarSeleccionRechazarEvento() {
+        this.accionSeleccionada = "rechazar";
+        this.gestor.rechazarEvento();
+    }
+
+    // Maneja la selección de reclamar el evento
+    tomarSeleccionReclamarEvento() {
+        this.accionSeleccionada = "reclamar";
+        this.mostrarMensaje("Funcionalidad de reclamo pendiente de implementar");
+    }
+
+    // Métodos auxiliares
     mostrarBotonVisualizarSismograma() {
         const btnVisualizar = document.getElementById("btn-visualizar-sismograma");
         if (btnVisualizar) {
             btnVisualizar.style.display = "block";
+            btnVisualizar.disabled = false;
         }
     }
 
@@ -222,14 +296,9 @@ class PantallaRegistrarResultadoRevision {
         `).join('');
     }
 
-    getValorDetalle(muestra, tipo) {
-        const detalle = muestra.detalles?.find(d => d.tipoDato?.denominacion === tipo);
-        return detalle?.valor ?? 'N/D';
-    }
-
     mostrarMensaje(mensaje) {
         alert(mensaje);
     }
 }
 
-export default PantallaRegistrarResultadoRevision; 
+export default PantallaDeRevisionManual; 

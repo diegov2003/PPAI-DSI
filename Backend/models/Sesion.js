@@ -6,7 +6,7 @@ class Sesion {
     }
 
     conocerUsuario(){
-        return this.usuario;
+        return this.usuario?.empleado;
     }
 }
 
