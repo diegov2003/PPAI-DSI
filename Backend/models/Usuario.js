@@ -1,7 +1,12 @@
 class Usuario {
-    constructor(nombreUsuario, contrasena) {
+    constructor(nombreUsuario, contrasena, empleado) {
         this.nombreUsuario = nombreUsuario;
         this.contrasena = contrasena;
+        this.empleado = empleado;
+    }
+
+    getRILogueado() {
+        return this.empleado;
     }
 }
 

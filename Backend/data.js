@@ -86,15 +86,13 @@ const seriesTemporales = [
     "2023-11-16T08:20:00",
     50 // Hz
   ),
+  new SerieTemporal(
+    true,
+    "2023-11-17T10:00:00",
+    "2023-11-17T10:05:00",
+    50 // Hz
+  )
 ];
-
-// Agregar muestras a series temporales
-const muestra1 = new MuestraSismica("2023-11-15T14:30:00");
-muestra1.detalles.push(
-  new DetalleMuestraSismica(7.0, tiposDato[0]), // Velocidad
-  new DetalleMuestraSismica(10.0, tiposDato[1]) // Frecuencia
-);
-seriesTemporales[0].muestras.push(muestra1);
 
 const alcances = [
   new AlcanceSismo("Sismo que afecta una zona limitada", "Local"),
@@ -142,7 +140,7 @@ const eventos = [
     alcances[1],
     clasificaciones[1],
     origenes[1]    
-),
+  ),
   new EventoSismico(
     "3",
     "2025-11-15T14:30:00",
@@ -152,24 +150,12 @@ const eventos = [
     -34.6037,
     -58.3816,
     4.5,
-    estados.find((e) => e.nombreEstado === "Bloqueado en revision"),
+    estados.find((e) => e.nombreEstado === "Auto detectado"),
     alcances[0],
     clasificaciones[2],
     origenes[2]
   ),
 ];
-
-eventos.forEach((evento) => {
-  if (!evento.cambiosDeEstado) {
-    evento.cambiosDeEstado = [
-      new CambioDeEstado(
-        evento.fechaHoraOcurrencia,
-        null, // Estado actual
-        evento.estado
-      ),
-    ];
-  }
-});
 
 // 5. Usuarios y empleados
 const usuarios = [
@@ -198,15 +184,78 @@ const empleados = [
 const cambiosEstado = [
   new CambioDeEstado(
     "2023-11-15T14:30:00",
-    null, // Estado actual
+    null,
     estados.find((e) => e.nombreEstado === "Auto detectado")
   ),
 ];
+
+// ESTABLECER RELACIONES
+
+// 1. Relacionar estaciones con series temporales y configurar muestras
+seriesTemporales.forEach((serie, index) => {
+    // Asignar estación
+    serie.estacion = estaciones[index % estaciones.length];
+    
+    // Crear muestras si no existen
+    if (!serie.muestras || serie.muestras.length === 0) {
+        serie.muestras = [];
+        const fechaBase = new Date(serie.fechaHoraInicioRegistroMuestras);
+        
+        // Crear 3 muestras para cada serie
+        for (let i = 0; i < 3; i++) {
+            const muestra = new MuestraSismica(
+                new Date(fechaBase.getTime() + (i * 60000)).toISOString()
+            );
+            
+            muestra.detalles = [
+                new DetalleMuestraSismica(
+                    (7 + Math.random() * 3).toFixed(2),
+                    tiposDato[0] // Velocidad
+                ),
+                new DetalleMuestraSismica(
+                    (8 + Math.random() * 7).toFixed(2),
+                    tiposDato[1] // Frecuencia
+                ),
+                new DetalleMuestraSismica(
+                    (0.5 + Math.random() * 2).toFixed(2),
+                    tiposDato[2] // Longitud
+                )
+            ];
+            
+            serie.muestras.push(muestra);
+        }
+    }
+});
+
+// 2. Relacionar eventos con series temporales
+eventos.forEach((evento, index) => {
+    evento.seriesTemporales = [seriesTemporales[index % seriesTemporales.length]];
+});
+
+// 3. Relacionar estaciones con sismógrafos
+estaciones.forEach((estacion, index) => {
+    if (index < sismografos.length) {
+        estacion.sismografo = sismografos[index];
+    }
+});
+
+// 4. Configurar cambios de estado iniciales
+eventos.forEach((evento) => {
+    if (!evento.cambiosDeEstado || evento.cambiosDeEstado.length === 0) {
+        evento.cambiosDeEstado = [
+            new CambioDeEstado(
+                evento.fechaHoraOcurrencia,
+                null,
+                evento.estado
+            )
+        ];
+    }
+});
+
 cambiosEstado[0].empleado = empleados[0];
 cambiosEstado[0].evento = eventos[0];
 
-
-export default {
+const data = {
     magnitudes,
     tiposDato,
     estados,
@@ -221,4 +270,13 @@ export default {
     clasificaciones,
     origenes
 };
+
+console.log("Datos inicializados:");
+console.log("Series temporales:", data.seriesTemporales);
+console.log("Eventos con sus series:", data.eventos.map(e => ({
+    id: e.idEvento,
+    seriesCount: e.seriesTemporales.length
+})));
+
+export default data;
 

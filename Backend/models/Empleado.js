@@ -1,18 +1,14 @@
 class Empleado {
-    constructor(apellido, nombre, mail, telefono, usuario) {
+    constructor(apellido, nombre, mail, telefono) {
         this.apellido = apellido;
         this.nombre = nombre;
         this.mail = mail;
         this.telefono = telefono;
-        this.usuario = usuario;
     }
 
-    getNombre(){
-        return this.nombre;
-    }
-
-    esTuUsuario(){
-
+    esTuUsuario(usuario) {
+        return this === usuario.empleado;
     }
 }
+
 export default Empleado;

@@ -1,5 +1,3 @@
-import Usuario from "./Usuario.js";
-
 class Sesion {
     constructor(fechaHoraDesde, fechaHoraHasta, usuario){
         this.fechaHoraDesde = fechaHoraDesde;

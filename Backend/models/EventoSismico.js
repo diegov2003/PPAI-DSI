@@ -15,19 +15,41 @@ class EventoSismico {
         this.estado = estado;
         this.seriesTemporales = [];
         this.cambiosDeEstado = [];
-        this.alcance = alcance; // ✅ Nuevo atributo
-        this.clasificacion = clasificacion; // ✅ Nuevo atributo
-        this.origenGeneracion = origenGeneracion; // ✅ Nuevo atributo
+        this.alcance = alcance;
+        this.clasificacion = clasificacion;
+        this.origenGeneracion = origenGeneracion;
     }
 
     agregarCambioEstado(cambioEstado) {
         this.cambiosDeEstado.push(cambioEstado);
         this.estado = cambioEstado.estado;
     }
+
+    formatearFecha(fechaStr) {
+        try {
+            const fecha = new Date(fechaStr);
+            if (isNaN(fecha.getTime())) {
+                return "Fecha no válida";
+            }
+            return fecha.toLocaleString('es-AR', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        } catch (error) {
+            return "Error en fecha";
+        }
+    }
+
     getDatosCompletos() {
-        return {
+        console.log("CU - Obteniendo datos del evento:", this.idEvento);
+        
+        const datos = {
             id: this.idEvento,
-            fechaHora: this.fechaHoraOcurrencia,
+            fechaHora: this.formatearFecha(this.fechaHoraOcurrencia),
             ubicacion: {
                 epicentro: { lat: this.latitudEpicentro, lon: this.longitudEpicentro },
                 hipocentro: { lat: this.latitudHipocentro, lon: this.longitudHipocentro }
@@ -37,8 +59,38 @@ class EventoSismico {
             alcance: this.alcance ? this.alcance.nombre : 'No definido',
             clasificacion: this.clasificacion ? this.clasificacion.nombre : 'No definido',
             origen: this.origenGeneracion ? this.origenGeneracion.nombre : 'No definido',
-            seriesTemporales: this.seriesTemporales.map(st => st.getDatos())
+            seriesTemporales: this.seriesTemporales.map(st => {
+                return {
+                    estacion: st.estacion ? st.estacion.nombre : 'Estación no definida',
+                    fechaInicio: this.formatearFecha(st.fechaHoraInicioRegistroMuestras),
+                    fechaFin: this.formatearFecha(st.fechaHoraRegistro),
+                    frecuenciaMuestreo: st.frecuenciaMuestreo,
+                    muestras: st.muestras.map(m => {
+                        const detallesPorTipo = {};
+                        m.detalles.forEach(d => {
+                            if (d && d.tipoDato) {
+                                detallesPorTipo[d.tipoDato.denominacion] = {
+                                    valor: d.valor,
+                                    unidad: d.tipoDato.nombreUnidadMedida
+                                };
+                            }
+                        });
+
+                        return {
+                            fechaHora: this.formatearFecha(m.fechaHoraMuestra),
+                            velocidad: detallesPorTipo['Velocidad'] ? 
+                                `${detallesPorTipo['Velocidad'].valor} ${detallesPorTipo['Velocidad'].unidad}` : 'N/D',
+                            frecuencia: detallesPorTipo['Frecuencia'] ? 
+                                `${detallesPorTipo['Frecuencia'].valor} ${detallesPorTipo['Frecuencia'].unidad}` : 'N/D',
+                            longitud: detallesPorTipo['Longitud'] ? 
+                                `${detallesPorTipo['Longitud'].valor} ${detallesPorTipo['Longitud'].unidad}` : 'N/D'
+                        };
+                    })
+                };
+            })
         };
+        
+        return datos;
     }
 }
 
