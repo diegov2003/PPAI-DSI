@@ -275,7 +275,7 @@ class PantallaDeRevisionManual {
     }
 
     solicitarSeleccionOpcionVisualizacion() {
-        if (this.gestor.generarSismograma()) {
+        if (this.gestor.llamarCUGenerarSismograma()) {
             this.mostrarMensaje("Sismograma generado correctamente");
             this.mostrarOpVisualizacion();
         }

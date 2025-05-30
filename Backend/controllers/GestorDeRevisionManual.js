@@ -138,7 +138,7 @@ class GestorDeRevisionManual {
     }
 
     // Genera el sismograma (simulado en esta implementación)
-    generarSismograma() {
+    llamarCUGenerarSismograma() {
         if (!this.validarDatosEvento()) return false;
         return true;
     }
