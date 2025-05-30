@@ -18,286 +18,352 @@ class PantallaDeRevisionManual {
     // Método inicial del CU
     opRegistrarResultadoDeRevisionManual() {
         this.habilitarPantalla();
-        this.mostrarEventosSismicosAutodetectados();
+        const eventos = this.gestor.registrarResultadosDeRevisionManual();
+        this.mostrarEventosSismicosAutodetectados(eventos);
     }
 
-    // Habilita la pantalla para interacción
     habilitarPantalla() {
-        // La lógica de habilitación ya está implícita en la carga de la página
-        console.log("Pantalla habilitada para interacción");
+        // Limpiar contenedores existentes
+        const container = document.getElementById("eventos-lista");
+        if (container) container.innerHTML = "<h2>Eventos Sísmicos</h2>";
     }
 
-    // Muestra la lista de eventos sísmicos autodetectados
-    mostrarEventosSismicosAutodetectados() {
-        const eventos = this.gestor.buscarEventosAutodetectados();
-        
-        const eventosLista = document.getElementById("eventos-lista");
-        if (!eventosLista) return;
-        
-        eventosLista.innerHTML = "";
+    mostrarEventosSismicosAutodetectados(eventos) {
+        const container = document.getElementById("eventos-lista");
+        if (!container) return;
 
-        if (eventos.length === 0) {
-            eventosLista.innerHTML = "<p>No hay eventos auto detectados para mostrar.</p>";
+        if (!eventos || eventos.length === 0) {
+            container.innerHTML += "<p class='text-center text-white'>No hay eventos sísmicos autodetectados disponibles.</p>";
             return;
         }
 
-        let html = `
-            <table border="1" style="width:100%; color:white; border-collapse:collapse;">
-                <thead>
+        const table = document.createElement("table");
+        table.className = "table table-dark table-hover";
+        table.innerHTML = `
+            <thead>
+                <tr>
+                    <th scope="col">ID</th>
+                    <th scope="col">Fecha y Hora</th>
+                    <th scope="col">Magnitud</th>
+                    <th scope="col">Estado</th>
+                    <th scope="col">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${eventos.map(evento => `
                     <tr>
-                        <th>ID</th>
-                        <th>Fecha y Hora</th>
-                        <th>Ubicación</th>
-                        <th>Magnitud</th>
-                        <th>Estado</th>
-                        <th>Acción</th>
+                        <td>${evento.id}</td>
+                        <td>${new Date(evento.fechaHora).toLocaleString()}</td>
+                        <td>${evento.magnitud}</td>
+                        <td>${evento.estado}</td>
+                        <td>
+                            <button class="btn btn-primary btn-sm btn-revisar" data-id="${evento.id}">
+                                Revisar
+                            </button>
+                        </td>
                     </tr>
-                </thead>
-                <tbody>
+                `).join("")}
+            </tbody>
         `;
 
-        eventos.forEach((evento) => {
-            const fechaHora = new Date(evento.fechaHoraOcurrencia);
-            const fechaStr = fechaHora.toLocaleDateString();
-            const horaStr = fechaHora.toLocaleTimeString();
-            const estadoNombre = evento.estado?.nombreEstado || "Desconocido";
-            const botonHabilitado = evento.estado.esAutoDetectado();
-
-            html += `
-                <tr>
-                    <td>${evento.idEvento}</td>
-                    <td>${fechaStr} ${horaStr}</td>
-                    <td>Lat: ${evento.latitudEpicentro.toFixed(4)}, Lon: ${evento.longitudEpicentro.toFixed(4)}</td>
-                    <td>${evento.valorMagnitud}</td>
-                    <td>${estadoNombre}</td>
-                    <td>
-                        <button class="boton btn-revisar" data-id="${evento.idEvento}" ${botonHabilitado ? "" : "disabled"}>
-                            Revisar
-                        </button>
-                    </td>
-                </tr>
-            `;
-        });
-
-        html += `</tbody></table>`;
-        eventosLista.innerHTML = html;
-
+        container.appendChild(table);
         this.solicitarSeleccionDeEvento();
     }
 
-    // Configura los listeners para la selección de evento
     solicitarSeleccionDeEvento() {
         document.querySelectorAll(".btn-revisar").forEach((btn) => {
             btn.addEventListener("click", (e) => {
                 const eventoId = e.target.getAttribute("data-id");
-                this.iniciarSeleccionDeEvento(eventoId);
+                this.tomarSeleccionEvento(eventoId);
             });
         });
     }
 
-    // Inicia el proceso de selección de un evento
-    iniciarSeleccionDeEvento(eventoId) {
-        this.gestor.seleccionarEvento(eventoId);
-        window.location.href = `datosSismo.html?id=${eventoId}`;
+    tomarSeleccionEvento(eventoId) {
+        const datosEvento = this.gestor.seleccionarEvento(eventoId);
+        if (datosEvento) {
+            window.location.href = `datosSismo.html?id=${eventoId}`;
+        }
     }
 
-    // Muestra los datos detallados del evento sísmico
-    mostrarDatosDelEventoSismico(datosEvento) {
+    mostrarDatosDelEventoSismico(evento) {
         const container = document.getElementById("datos-sismo-container");
         if (!container) return;
 
         container.innerHTML = `
+            <h2 class="titulo-principal">Detalles del Evento Sísmico ${evento.idEvento}</h2>
+            
             <div class="datos-container">
-                <h2 class="titulo-principal">Detalles del Evento Sísmico</h2>
-                
+                <h3 class="subtitulo">Información General</h3>
                 <table class="tabla-datos">
-                    <caption>Información Básica</caption>
-                    <tbody>
-                        <tr>
-                            <th>ID Evento</th>
-                            <td>${datosEvento.id}</td>
-                            <th>Fecha y Hora</th>
-                            <td>${datosEvento.fechaHora}</td>
-                        </tr>
-                        <tr>
-                            <th>Magnitud</th>
-                            <td>${datosEvento.magnitud} Richter</td>
-                            <th>Estado</th>
-                            <td class="estado-${datosEvento.estado.toLowerCase().replace(/\s/g, '-')}">
-                                ${datosEvento.estado}
-                            </td>
-                        </tr>
-                        <tr>
-                            <th>Alcance</th>
-                            <td>${datosEvento.alcance}</td>
-                            <th>Clasificación</th>
-                            <td>${datosEvento.clasificacion}</td>
-                        </tr>
-                        <tr>
-                            <th>Origen</th>
-                            <td colspan="3">${datosEvento.origen}</td>
-                        </tr>
-                        <tr>
-                            <th>Ubicación Epicentro</th>
-                            <td colspan="3">
-                                Lat: ${datosEvento.ubicacion.epicentro.lat.toFixed(4)}, 
-                                Lon: ${datosEvento.ubicacion.epicentro.lon.toFixed(4)}
-                            </td>
-                        </tr>
-                    </tbody>
+                    <tr>
+                        <th>ID:</th>
+                        <td>${evento.idEvento}</td>
+                    </tr>
+                    <tr>
+                        <th>Fecha y Hora:</th>
+                        <td>${evento.formatearFecha(evento.getFechaHoraOcurrencia())}</td>
+                    </tr>
+                    <tr>
+                        <th>Magnitud:</th>
+                        <td>${evento.getValorMagnitud()}</td>
+                    </tr>
+                    <tr>
+                        <th>Estado:</th>
+                        <td>${evento.getEstadoActual().nombreEstado}</td>
+                    </tr>
                 </table>
+            </div>
 
-                <div class="seccion-series">
-                    <h3 class="subtitulo">Datos de Series Temporales</h3>
-                    ${this.generarTablaSeriesTemporales(datosEvento.seriesTemporales)}
-                </div>
+            <div class="datos-container">
+                <h3 class="subtitulo">Ubicación</h3>
+                <table class="tabla-datos">
+                    <tr>
+                        <th>Epicentro:</th>
+                        <td>Lat: ${evento.getLatitudEpicentro()}, Lon: ${evento.getLongitudEpicentro()}</td>
+                    </tr>
+                    <tr>
+                        <th>Hipocentro:</th>
+                        <td>Lat: ${evento.getLatitudHipocentro()}, Lon: ${evento.getLongitudHipocentro()}</td>
+                    </tr>
+                </table>
+            </div>
 
-                <div class="panel-acciones">
-                    <div class="grupo-botones">
-                        <button id="btn-generar-sismograma" class="boton accion-primaria">
-                            <span class="icono"></span> Generar Sismograma
-                        </button>
-                        <button id="btn-visualizar-sismograma" class="boton accion-primaria" disabled style="display: none;">
-                            <span class="icono"></span> Visualizar Sismograma
-                        </button>
-                    </div>
+            <div class="datos-container">
+                <h3 class="subtitulo">Clasificación</h3>
+                <table class="tabla-datos">
+                    <tr>
+                        <th>Alcance:</th>
+                        <td>${evento.getAlcance()?.nombre || 'No definido'}</td>
+                    </tr>
+                    <tr>
+                        <th>Clasificación:</th>
+                        <td>${evento.getClasificacion()?.nombre || 'No definido'}</td>
+                    </tr>
+                    <tr>
+                        <th>Origen:</th>
+                        <td>${evento.getOrigen()?.nombre || 'No definido'}</td>
+                    </tr>
+                </table>
+            </div>
 
-                    <div class="grupo-botones">
-                        <h3 class="subtitulo">Acciones de Revisión</h3>
-                        <div class="botones-accion">
-                            <button id="btn-confirmar" class="boton accion-confirmar" disabled>
-                                <span class="icono"></span> Confirmar
-                            </button>
-                            <button id="btn-rechazar" class="boton accion-rechazar">
-                                <span class="icono"></span> Rechazar evento
-                            </button>
-                            <button id="btn-revision" class="boton accion-revision">
-                                <span class="icono"></span> Revisión por experto
-                            </button>
-                        </div>
-                    </div>
+            <div class="panel-acciones">
+                <button id="btn-modificar" class="boton accion-primaria">Modificar</button>
+            </div>
 
-                    <button id="btn-volver" class="boton volver">
-                        <span class="icono">←</span> Volver al listado
-                    </button>
-                </div>
+            ${this.generarHTMLSeriesTemporales(evento.obtenerSeriesYMuestrasDeEvento())}
+
+            <div class="panel-acciones">
+                <button id="btn-generar-sismograma" class="boton accion-primaria">Generar Sismograma</button>
+                <button id="btn-confirmar" class="boton accion-confirmar">Confirmar</button>
+                <button id="btn-rechazar" class="boton accion-rechazar">Rechazar</button>
+                <button id="btn-revision" class="boton accion-revision">Solicitar revisión a Experto</button>
+                <button id="btn-volver" class="boton volver">Volver</button>
             </div>
         `;
 
         this.configurarEventosUI();
     }
 
-    // Configura todos los eventos de la UI
+    generarHTMLSeriesTemporales(series) {
+        if (!series || series.length === 0) {
+            return '<div class="no-data">No hay series temporales disponibles</div>';
+        }
+
+        return `
+            <div class="datos-container">
+                <h3 class="subtitulo">Series Temporales</h3>
+                ${series.map(serie => `
+                    <div class="serie-temporal">
+                        <h4>Estación: ${serie.estacion?.nombre || 'Estación no definida'}</h4>
+                        <div class="serie-info">
+                            <p>Inicio: ${this.formatearFecha(serie.fechaHoraInicioRegistroMuestras)}</p>
+                            <p>Fin: ${this.formatearFecha(serie.fechaHoraRegistro)}</p>
+                            <p>Frecuencia de muestreo: ${serie.frecuenciaMuestreo} Hz</p>
+                        </div>
+                        <table class="tabla-series">
+                            <thead>
+                                <tr>
+                                    <th>Fecha/Hora</th>
+                                    <th>Velocidad</th>
+                                    <th>Frecuencia</th>
+                                    <th>Longitud</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${serie.muestras.map(m => {
+                                    const detallesPorTipo = {};
+                                    m.detalles.forEach(d => {
+                                        if (d?.tipoDato) {
+                                            detallesPorTipo[d.tipoDato.denominacion] = {
+                                                valor: d.valor,
+                                                unidad: d.tipoDato.nombreUnidadMedida
+                                            };
+                                        }
+                                    });
+
+                                    return `
+                                        <tr>
+                                            <td>${this.formatearFecha(m.fechaHoraMuestra)}</td>
+                                            <td>${detallesPorTipo['Velocidad'] ? 
+                                                `${detallesPorTipo['Velocidad'].valor} ${detallesPorTipo['Velocidad'].unidad}` : 'N/D'}</td>
+                                            <td>${detallesPorTipo['Frecuencia'] ? 
+                                                `${detallesPorTipo['Frecuencia'].valor} ${detallesPorTipo['Frecuencia'].unidad}` : 'N/D'}</td>
+                                            <td>${detallesPorTipo['Longitud'] ? 
+                                                `${detallesPorTipo['Longitud'].valor} ${detallesPorTipo['Longitud'].unidad}` : 'N/D'}</td>
+                                        </tr>
+                                    `;
+                                }).join("")}
+                            </tbody>
+                        </table>
+                    </div>
+                `).join("")}
+            </div>
+        `;
+    }
+
+    formatearFecha(fechaStr) {
+        try {
+            if (!fechaStr) return "Fecha no disponible";
+            
+            const fecha = new Date(fechaStr);
+            if (isNaN(fecha.getTime())) {
+                return "Fecha no válida";
+            }
+
+            const opciones = {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: true
+            };
+
+            return fecha.toLocaleString('es-AR', opciones);
+        } catch (error) {
+            return "Error en fecha";
+        }
+    }
+
     configurarEventosUI() {
-        // Configurar botón de generar sismograma
         document.getElementById("btn-generar-sismograma")?.addEventListener("click", () => {
             this.solicitarSeleccionOpcionVisualizacion();
         });
 
-        // Configurar botón de rechazar
         document.getElementById("btn-rechazar")?.addEventListener("click", () => {
             this.tomarSeleccionRechazarEvento();
         });
 
-        // Configurar botón de volver
         document.getElementById("btn-volver")?.addEventListener("click", () => {
-            this.tomarSeleccionNoVisualizar();
+            window.location.href = "eventos.html";
         });
 
-        // Configurar botón de confirmar
         document.getElementById("btn-confirmar")?.addEventListener("click", () => {
+            // TODO: Implementar lógica de confirmación
+            this.mostrarMensaje("Funcionalidad de confirmación no implementada");
+        });
+
+        document.getElementById("btn-modificar")?.addEventListener("click", () => {
             this.tomarSeleccionNoModificar();
         });
 
-        // Configurar botón de revisión
         document.getElementById("btn-revision")?.addEventListener("click", () => {
-            this.tomarSeleccionReclamarEvento();
+            this.mostrarMensaje("No se implementa en el Caso de Uso");
         });
     }
 
-    // Solicita al usuario que seleccione si desea visualizar el sismograma
     solicitarSeleccionOpcionVisualizacion() {
-        this.visualizacionSeleccionada = true;
         if (this.gestor.generarSismograma()) {
-            this.mostrarBotonVisualizarSismograma();
+            this.mostrarMensaje("Sismograma generado correctamente");
+            this.mostrarOpVisualizacion();
         }
     }
 
-    // Maneja la selección de no visualizar el sismograma
+    mostrarOpVisualizacion() {
+        const container = document.getElementById("datos-sismo-container");
+        if (!container) return;
+
+        // Verificar si ya existe el botón de visualizar
+        if (!document.getElementById("btn-visualizar-sismograma")) {
+            const botonContainer = document.createElement("div");
+            botonContainer.className = "panel-acciones mt-3";
+            botonContainer.innerHTML = `
+                <button id="btn-visualizar-sismograma" class="boton accion-primaria">
+                    Visualizar Sismograma
+                </button>
+            `;
+            
+            // Insertar el botón después del botón de generar sismograma
+            const btnGenerar = document.getElementById("btn-generar-sismograma");
+            if (btnGenerar) {
+                btnGenerar.parentNode.insertBefore(botonContainer, btnGenerar.nextSibling);
+                
+                // Agregar el evento click al nuevo botón
+                document.getElementById("btn-visualizar-sismograma").addEventListener("click", () => {
+                    this.tomarSeleccionNoVisualizar();
+                });
+            }
+        }
+        this.mostrarMensaje("Se habilitó la opción de visualización del sismograma");
+    }
+
     tomarSeleccionNoVisualizar() {
-        window.location.href = "eventos.html";
+        // No hace nada, solo muestra el mensaje
+        this.mostrarMensaje("No se implementa en el Caso de Uso");
     }
 
-    // Solicita al usuario que seleccione una acción
-    solicitarSeleccionDeAccion() {
-        // Esta funcionalidad está implícita en los botones de acción
-        console.log("Esperando selección de acción del usuario");
-    }
-
-    // Maneja la selección de no modificar el evento
     tomarSeleccionNoModificar() {
-        this.accionSeleccionada = "confirmar";
-        // Implementar lógica de confirmación
-        this.mostrarMensaje("Funcionalidad de confirmación pendiente de implementar");
+        if (this.gestor.tomarSeleccionNoModificar()) {
+            this.mostrarMensaje("No se implementa en el Caso de Uso");
+        }
     }
 
-    // Maneja la selección de rechazar el evento
     tomarSeleccionRechazarEvento() {
-        this.accionSeleccionada = "rechazar";
-        this.gestor.rechazarEvento();
-    }
+        // Primero mostramos los datos validados
+        const datosEvento = this.gestor.eventoSeleccionado;
+        this.mostrarMensaje(
+            "Datos validados:\n" +
+            `- Magnitud: ${datosEvento.valorMagnitud}\n` +
+            `- Alcance: ${datosEvento.alcance.nombre}\n` +
+            `- Origen de generación: ${datosEvento.origenGeneracion.nombre}`
+        );
 
-    // Maneja la selección de reclamar el evento
-    tomarSeleccionReclamarEvento() {
-        this.accionSeleccionada = "reclamar";
-        this.mostrarMensaje("Funcionalidad de reclamo pendiente de implementar");
-    }
+        // Ejecutamos el rechazo
+        this.gestor.tomarSeleccionRechazarEvento();
 
-    // Métodos auxiliares
-    mostrarBotonVisualizarSismograma() {
-        const btnVisualizar = document.getElementById("btn-visualizar-sismograma");
-        if (btnVisualizar) {
-            btnVisualizar.style.display = "block";
-            btnVisualizar.disabled = false;
-        }
-    }
+        // Mostramos el resultado del cambio de estado
+        const fechaActual = new Date().toLocaleString();
+        const usuarioLogeado = this.gestor.sesionActual.usuario.empleado;
+        
+        this.mostrarMensaje(
+            "Evento actualizado:\n" +
+            "- Estado: Rechazado\n" +
+            `- Fecha y hora de revisión: ${fechaActual}\n` +
+            `- Analista responsable: ${usuarioLogeado.nombre} ${usuarioLogeado.apellido}`
+        );
 
-    generarTablaSeriesTemporales(series) {
-        if (!series || series.length === 0) {
-            return '<div class="no-data">No hay datos de series temporales disponibles</div>';
-        }
-
-        return series.map(serie => `
-            <div class="serie-temporal">
-                <h4>${serie.estacion}</h4>
-                <p>Período: ${serie.fechaInicio} - ${serie.fechaFin}</p>
-                <p>Frecuencia de muestreo: ${serie.frecuenciaMuestreo} Hz</p>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Fecha/Hora</th>
-                            <th>Velocidad</th>
-                            <th>Frecuencia</th>
-                            <th>Longitud</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${serie.muestras?.map(muestra => `
-                            <tr>
-                                <td>${muestra.fechaHora}</td>
-                                <td>${muestra.velocidad}</td>
-                                <td>${muestra.frecuencia}</td>
-                                <td>${muestra.longitud}</td>
-                            </tr>
-                        `).join('') || '<tr><td colspan="4">No hay muestras</td></tr>'}
-                    </tbody>
-                </table>
-            </div>
-        `).join('');
+        this.gestor.finCU();
+        window.location.href = "eventos.html";
     }
 
     mostrarMensaje(mensaje) {
         alert(mensaje);
+    }
+
+    mostrarOpcionesDeAccion() {
+        const container = document.querySelector('.panel-acciones');
+        if (container) {
+            container.style.display = 'block';
+        }
+    }
+
+    mostrarOpcionModificar() {
+        const btnModificar = document.getElementById('btn-modificar');
+        if (btnModificar) {
+            btnModificar.style.display = 'block';
+        }
     }
 }
 

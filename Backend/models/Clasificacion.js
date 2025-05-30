@@ -4,5 +4,9 @@ class Clasificacion {
         this.kmProfundidadDesde = kmProfundidadDesde;
         this.kmProfundidadHasta = kmProfundidadHasta;
     }
+
+    getNombre() {
+        return this.nombre;
+    }
 }
 export default Clasificacion;

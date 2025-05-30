@@ -8,11 +8,6 @@ class Sismografo {
     getIdentificadorSismografo() {
         return this.identificadorSismofrafo;
     }
-    setEstadoActual() {
-        if (this.cambioDeEstadoActual) {
-            this.cambioDeEstadoActual.finalizar();
-        }
-    }
 }
 export default Sismografo;
 

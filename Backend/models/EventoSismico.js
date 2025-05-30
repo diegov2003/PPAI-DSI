@@ -1,3 +1,6 @@
+import Estado from './Estado.js';
+import CambioDeEstado from './CambioDeEstado.js';
+
 class EventoSismico {
     autoIncrementalId = (id) => {
         return String(id).padStart(3, '0');
@@ -50,60 +53,87 @@ class EventoSismico {
         }
     }
 
-    getDatosCompletos() {
-        console.log("DEBUG - Fecha original:", this.fechaHoraOcurrencia);
-        const fechaFormateada = this.formatearFecha(this.fechaHoraOcurrencia);
-        console.log("DEBUG - Fecha formateada:", fechaFormateada);
-        
-        const datos = {
-            id: this.idEvento,
-            fechaHora: fechaFormateada,
-            ubicacion: {
-                epicentro: { lat: this.latitudEpicentro, lon: this.longitudEpicentro },
-                hipocentro: { lat: this.latitudHipocentro, lon: this.longitudHipocentro }
-            },
-            magnitud: this.valorMagnitud,
-            estado: this.estado.nombreEstado,
-            alcance: this.alcance ? this.alcance.nombre : 'No definido',
-            clasificacion: this.clasificacion ? this.clasificacion.nombre : 'No definido',
-            origen: this.origenGeneracion ? this.origenGeneracion.nombre : 'No definido',
-            seriesTemporales: this.seriesTemporales.map(st => {
-                console.log("DEBUG - Fecha inicio serie:", st.fechaHoraInicioRegistroMuestras);
-                console.log("DEBUG - Fecha fin serie:", st.fechaHoraRegistro);
-                
-                return {
-                    estacion: st.estacion ? st.estacion.nombre : 'Estación no definida',
-                    fechaInicio: this.formatearFecha(st.fechaHoraInicioRegistroMuestras),
-                    fechaFin: this.formatearFecha(st.fechaHoraRegistro),
-                    frecuenciaMuestreo: st.frecuenciaMuestreo,
-                    muestras: st.muestras.map(m => {
-                        console.log("DEBUG - Fecha muestra:", m.fechaHoraMuestra);
-                        
-                        const detallesPorTipo = {};
-                        m.detalles.forEach(d => {
-                            if (d && d.tipoDato) {
-                                detallesPorTipo[d.tipoDato.denominacion] = {
-                                    valor: d.valor,
-                                    unidad: d.tipoDato.nombreUnidadMedida
-                                };
-                            }
-                        });
+    getFechaHoraOcurrencia() {
+        return this.fechaHoraOcurrencia;
+    }
 
-                        return {
-                            fechaHora: this.formatearFecha(m.fechaHoraMuestra),
-                            velocidad: detallesPorTipo['Velocidad'] ? 
-                                `${detallesPorTipo['Velocidad'].valor} ${detallesPorTipo['Velocidad'].unidad}` : 'N/D',
-                            frecuencia: detallesPorTipo['Frecuencia'] ? 
-                                `${detallesPorTipo['Frecuencia'].valor} ${detallesPorTipo['Frecuencia'].unidad}` : 'N/D',
-                            longitud: detallesPorTipo['Longitud'] ? 
-                                `${detallesPorTipo['Longitud'].valor} ${detallesPorTipo['Longitud'].unidad}` : 'N/D'
-                        };
-                    })
-                };
-            })
-        };
-        
-        return datos;
+    getLatitudEpicentro() {
+        return this.latitudEpicentro;
+    }
+
+    getLongitudEpicentro() {
+        return this.longitudEpicentro;
+    }
+
+    getLatitudHipocentro() {
+        return this.latitudHipocentro;
+    }
+
+    getLongitudHipocentro() {
+        return this.longitudHipocentro;
+    }
+
+    getValorMagnitud() {
+        return this.valorMagnitud;
+    }
+
+    getAlcance() {
+        return this.alcance;
+    }
+
+    getClasificacion() {
+        return this.clasificacion;
+    }
+
+    getOrigen() {
+        return this.origenGeneracion;
+    }
+
+    obtenerSeriesYMuestrasDeEvento() {
+        return this.seriesTemporales;
+    }
+
+    esAutodetectado() {
+        return this.estado.esAutoDetectado();
+    }
+
+    esRechazado() {
+        return this.estado.nombreEstado === "Rechazado";
+    }
+
+    crearCambioEstadoBloqueadoEnRevision() {
+        const nuevoEstado = new Estado("Sismico", "Bloqueado en revision");
+        return new CambioDeEstado(new Date().toISOString(), null, nuevoEstado);
+    }
+
+    crearCambioEstadoRechazado() {
+        const nuevoEstado = new Estado("Sismico", "Rechazado");
+        return new CambioDeEstado(new Date().toISOString(), null, nuevoEstado);
+    }
+
+    rechazar() {
+        const cambioEstado = this.crearCambioEstadoRechazado();
+        this.agregarCambioEstado(cambioEstado);
+    }
+
+    esEstadoActual() {
+        return this.cambiosDeEstado.length > 0 && 
+               this.cambiosDeEstado[this.cambiosDeEstado.length - 1].esEstadoActual();
+    }
+
+    getEstadoActual() {
+        return this.estado;
+    }
+
+    clasificarPorEstacionSismologica() {
+        return this.seriesTemporales.reduce((clasificadas, serie) => {
+            const nombreEstacion = serie.estacion?.getNombre() || 'Sin estación';
+            if (!clasificadas[nombreEstacion]) {
+                clasificadas[nombreEstacion] = [];
+            }
+            clasificadas[nombreEstacion].push(serie);
+            return clasificadas;
+        }, {});
     }
 }
 

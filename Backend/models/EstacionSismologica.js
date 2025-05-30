@@ -8,5 +8,9 @@ class EstacionSismologica {
         this.nombre = nombre;
         this.nroCertificacionAdquisicion = nroCertificacionAdquisicion;
     }
+
+    getNombre() {
+        return this.nombre;
+    }
 }
 export default EstacionSismologica;

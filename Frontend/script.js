@@ -8,6 +8,12 @@ document.addEventListener("DOMContentLoaded", function () {
     const pantalla = new PantallaDeRevisionManual();
     const gestor = new GestorDeRevisionManual();
 
+    // Configurar el botón de cancelar en todas las páginas
+    document.getElementById("btn-cancelar")?.addEventListener("click", () => {
+        window.alert("Se canceló la revisión manual");
+        window.location.href = "index.html";
+    });
+
     // Crear empleado y usuario de prueba
     const empleadoPrueba = new Empleado(
         "Pérez",
@@ -55,7 +61,10 @@ document.addEventListener("DOMContentLoaded", function () {
         const urlParams = new URLSearchParams(window.location.search);
         const eventoId = urlParams.get("id");
         if (eventoId) {
-            gestor.seleccionarEvento(eventoId);
+            const datosEvento = gestor.seleccionarEvento(eventoId);
+            if (datosEvento) {
+                pantalla.mostrarDatosDelEventoSismico(datosEvento);
+            }
         }
     }
 });

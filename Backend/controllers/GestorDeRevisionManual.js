@@ -7,6 +7,7 @@ class GestorDeRevisionManual {
         this.pantalla = null;
         this.eventoSeleccionado = null;
         this.sesionActual = null;
+        this.eventosAutodetectados = [];
     }
 
     setPantalla(pantalla) {
@@ -17,169 +18,205 @@ class GestorDeRevisionManual {
         this.sesionActual = sesion;
     }
 
-    buscarEventosAutodetectados() {
-        const eventos = Datos.eventos.filter(
+    // Método principal que inicia el caso de uso
+    registrarResultadosDeRevisionManual() {
+        this.eventosAutodetectados = this.buscarEventosAutodetectado();
+        const eventosOrdenados = this.ordenarListadoDeEventosXFechaHora(this.eventosAutodetectados);
+        return this.obtenerDatosDeEventos(eventosOrdenados);
+    }
+
+    // Busca todos los eventos en estado "Auto detectado"
+    buscarEventosAutodetectado() {
+        return Datos.eventos.filter(
             (evento) =>
                 evento.estado instanceof Estado &&
                 evento.estado.esAmbitoSismico() &&
                 evento.estado.esAutoDetectado()
         );
-        return eventos;
     }
 
+    // Obtiene los datos necesarios para mostrar de cada evento
+    obtenerDatosDeEventos(eventos) {
+        return eventos.map(evento => ({
+            id: evento.idEvento,
+            fechaHora: evento.fechaHoraOcurrencia,
+            magnitud: evento.valorMagnitud,
+            estado: evento.estado.nombreEstado
+        }));
+    }
+
+    // Ordena los eventos por fecha y hora
+    ordenarListadoDeEventosXFechaHora(eventos) {
+        return eventos.sort((a, b) => 
+            new Date(b.fechaHoraOcurrencia) - new Date(a.fechaHoraOcurrencia)
+        );
+    }
+
+    // Maneja la selección de un evento específico
     seleccionarEvento(eventoId) {
         const evento = Datos.eventos.find(e => e.idEvento === eventoId);
-        
         if (!evento) {
             this.pantalla.mostrarMensaje("Evento no encontrado");
-            return;
+            return null;
         }
-
         this.eventoSeleccionado = evento;
-        
-        // Finalizar estado actual
-        if (evento.cambiosDeEstado && evento.cambiosDeEstado.length > 0) {
-            const estadoActual = evento.cambiosDeEstado.find(ce => ce.esEstadoActual());
-            if (estadoActual) {
-                estadoActual.setFechaHoraFin(new Date().toISOString());
-            }
-        }
-
-        // Crear nuevo cambio de estado "bloqueado en revision"
-        const nuevoEstado = Datos.estados.find(
-            e => e.esBloqueadoEnRevision() && e.esAmbitoSismico()
-        );
-
-        if (!nuevoEstado) {
-            this.pantalla.mostrarMensaje("Error: No se encontró el estado 'bloqueado en revision'");
-            return;
-        }
-
-        const nuevoCambioEstado = new CambioDeEstado(
-            new Date().toISOString(),
-            null,
-            nuevoEstado
-        );
-
-        // Actualizar el estado del evento
-        if (!evento.cambiosDeEstado) {
-            evento.cambiosDeEstado = [];
-        }
-        evento.cambiosDeEstado.push(nuevoCambioEstado);
-        evento.estado = nuevoEstado;
-
-        // Notificar el cambio de estado
-        this.pantalla.mostrarMensaje("El evento ha cambiado a estado: Bloqueado en revisión");
-        
-        // Mostrar datos del evento
-        const datosCompletos = evento.getDatosCompletos();
-        this.pantalla.mostrarDatosDelEventoSismico(datosCompletos);
+        this.buscarBloqueadoEnRevision();
+        return this.buscarDatosDeEventoSismico();
     }
 
-    validarDatosEvento() {
-        if (!this.eventoSeleccionado) {
-            return false;
+    // Busca y aplica el estado "Bloqueado en revision"
+    buscarBloqueadoEnRevision() {
+        const estadoBloqueado = Datos.estados.find(
+            e => e.esBloqueadoEnRevision() && e.esAmbitoSismico()
+        );
+        if (estadoBloqueado) {
+            if (this.eventoSeleccionado.cambiosDeEstado.length > 0) {
+                const estadoActual = this.eventoSeleccionado.cambiosDeEstado.find(ce => ce.esEstadoActual());
+                if (estadoActual) {
+                    estadoActual.setFechaHoraFin(this.obtenerFechaHoraActual());
+                }
+            }
+            const nuevoCambioEstado = new CambioDeEstado(
+                this.obtenerFechaHoraActual(),
+                null,
+                estadoBloqueado
+            );
+            this.eventoSeleccionado.cambiosDeEstado.push(nuevoCambioEstado);
+            this.eventoSeleccionado.estado = estadoBloqueado;
         }
-        
-        const esValido = (
+    }
+
+    // Obtiene la fecha y hora actual en formato ISO
+    obtenerFechaHoraActual() {
+        return new Date().toISOString();
+    }
+
+    // Obtiene todos los datos relevantes del evento seleccionado
+    buscarDatosDeEventoSismico() {
+        if (!this.eventoSeleccionado) return null;
+        return this.eventoSeleccionado;
+    }
+
+    // Obtiene y clasifica las series temporales del evento
+    obtenerSeriesYMuestrasDeEvento() {
+        if (!this.eventoSeleccionado?.seriesTemporales) return [];
+        return this.clasificarPorEstacionSismologica(this.eventoSeleccionado.seriesTemporales);
+    }
+
+    // Clasifica las series temporales por estación y procesa sus detalles
+    clasificarPorEstacionSismologica(series) {
+        return series.map(serie => {
+            const datosCompletos = {
+                estacion: serie.estacion?.nombre || 'Sin estación',
+                fechaInicio: serie.fechaHoraInicioRegistroMuestras,
+                fechaFin: serie.fechaHoraRegistro,
+                frecuenciaMuestreo: serie.frecuenciaMuestreo,
+                muestras: serie.muestras.map(muestra => {
+                    const detallesPorTipo = {};
+                    muestra.detalles.forEach(detalle => {
+                        if (detalle && detalle.tipoDato) {
+                            detallesPorTipo[detalle.tipoDato.denominacion] = {
+                                valor: detalle.valor,
+                                unidad: detalle.tipoDato.nombreUnidadMedida
+                            };
+                        }
+                    });
+
+                    return {
+                        fechaHora: muestra.fechaHoraMuestra,
+                        velocidad: detallesPorTipo['Velocidad'] ? 
+                            `${detallesPorTipo['Velocidad'].valor} ${detallesPorTipo['Velocidad'].unidad}` : 'N/D',
+                        frecuencia: detallesPorTipo['Frecuencia'] ? 
+                            `${detallesPorTipo['Frecuencia'].valor} ${detallesPorTipo['Frecuencia'].unidad}` : 'N/D',
+                        longitud: detallesPorTipo['Longitud'] ? 
+                            `${detallesPorTipo['Longitud'].valor} ${detallesPorTipo['Longitud'].unidad}` : 'N/D'
+                    };
+                })
+            };
+            return datosCompletos;
+        });
+    }
+
+    // Genera el sismograma (simulado en esta implementación)
+    generarSismograma() {
+        if (!this.validarDatosEvento()) return false;
+        return true;
+    }
+
+    // Muestra el botón para visualizar el sismograma
+    mostrarBotonVisualizarSismograma() {
+        this.pantalla.mostrarBotonVisualizarSismograma();
+    }
+
+    // Maneja la decisión de no visualizar
+    tomarSeleccionNoVisualizar() {
+        return true;
+    }
+
+    // Maneja la decisión de no modificar
+    tomarSeleccionNoModificar() {
+        return true;
+    }
+
+    // Inicia el proceso de rechazo del evento
+    tomarSeleccionRechazarEvento() {
+        if (this.validarDatosEvento()) {
+            const usuarioLogeado = this.buscarUsuarioLogeado();
+            if (usuarioLogeado) {
+                const estadoRechazado = this.buscarEstadoRechazado();
+                if (estadoRechazado) {
+                    this.rechazarEvento(estadoRechazado, usuarioLogeado);
+                }
+            }
+        }
+    }
+
+    // Valida que el evento tenga todos los datos necesarios
+    validarDatosEvento() {
+        if (!this.eventoSeleccionado) return false;
+        return !!(
             this.eventoSeleccionado.valorMagnitud &&
             this.eventoSeleccionado.alcance &&
             this.eventoSeleccionado.origenGeneracion
         );
-
-        let esValidoString = "No";
-
-        if (esValido) {
-            esValidoString = "Si"};
-
-        // Log específico del CU para validación
-        window.alert(`Validación de datos del evento 
-            Magnitud: ${this.eventoSeleccionado.valorMagnitud}
-            Alcance: ${this.eventoSeleccionado.alcance?.nombre}
-            Origen: ${this.eventoSeleccionado.origenGeneracion?.nombre}
-            Resultado validación: ${esValidoString}`);
-        
-        return esValido;
     }
 
-    generarSismograma() {
-        this.pantalla.mostrarMensaje("Caso de uso Generar sismograma exitosamente ejecutado");
-        this.pantalla.mostrarBotonVisualizarSismograma();
-        return true;
+    // Obtiene el usuario actualmente logueado
+    buscarUsuarioLogeado() {
+        return this.sesionActual?.usuario;
     }
 
-    rechazarEvento() {
-        // Debug: Verificar sesión y empleado
-        console.log("DEBUG - Sesión actual:", this.sesionActual);
-        if (this.sesionActual) {
-            console.log("DEBUG - Usuario en sesión:", this.sesionActual.usuario);
-            console.log("DEBUG - Empleado en usuario:", this.sesionActual.usuario.empleado);
-        }
-
-        // Paso 16: Validar datos del evento
-        if (!this.validarDatosEvento()) {
-            this.pantalla.mostrarMensaje("Error: Faltan datos requeridos del evento");
-            return;
-        }
-
-        // Paso 17: Actualizar estado a rechazado
-        const estadoRechazado = Datos.estados.find(
+    // Busca el estado "Rechazado" en el sistema
+    buscarEstadoRechazado() {
+        return Datos.estados.find(
             e => e.nombreEstado === "Rechazado" && e.esAmbitoSismico()
         );
+    }
 
-        if (!estadoRechazado) {
-            this.pantalla.mostrarMensaje("Error: No se encontró el estado 'Rechazado'");
-            return;
-        }
-
-        // Finalizar estado actual
+    // Realiza el rechazo efectivo del evento
+    rechazarEvento(estadoRechazado, usuarioLogeado) {
         const estadoActual = this.eventoSeleccionado.cambiosDeEstado.find(
             ce => ce.esEstadoActual()
         );
         if (estadoActual) {
-            estadoActual.setFechaHoraFin(new Date().toISOString());
+            estadoActual.setFechaHoraFin(this.obtenerFechaHoraActual());
         }
 
-        // Crear nuevo cambio de estado
-        const fechaActual = new Date();
         const nuevoCambioEstado = new CambioDeEstado(
-            fechaActual.toISOString(),
+            this.obtenerFechaHoraActual(),
             null,
             estadoRechazado
         );
+        nuevoCambioEstado.empleado = usuarioLogeado.empleado;
+        
+        this.eventoSeleccionado.cambiosDeEstado.push(nuevoCambioEstado);
+        this.eventoSeleccionado.estado = estadoRechazado;
+    }
 
-        // Asignar el empleado que realiza el cambio (AS logueado)
-        if (this.sesionActual) {
-            const empleado = this.sesionActual.usuario.empleado;
-            console.log("DEBUG - Empleado obtenido para el cambio:", empleado);
-            
-            nuevoCambioEstado.empleado = empleado;
-            
-            // Actualizar el evento
-            this.eventoSeleccionado.cambiosDeEstado.push(nuevoCambioEstado);
-            this.eventoSeleccionado.estado = estadoRechazado;
-
-            // Debug: Verificar datos antes de mostrar mensaje
-            console.log("DEBUG - Datos para el mensaje:");
-            console.log("- ID Evento:", this.eventoSeleccionado.idEvento);
-            console.log("- Estado:", estadoRechazado.nombreEstado);
-            console.log("- Fecha:", fechaActual.toLocaleString());
-            console.log("- Empleado nombre:", empleado?.nombre);
-            console.log("- Empleado apellido:", empleado?.apellido);
-
-            // Mostrar resumen de la actualización
-            const mensaje = `Evento actualizado:
-    ID Evento: ${this.eventoSeleccionado.idEvento}
-    Nuevo estado: ${estadoRechazado.nombreEstado}
-    Fecha de revisión: ${fechaActual.toLocaleString()}
-    Analista: ${empleado?.nombre || 'N/D'} ${empleado?.apellido || 'N/D'}`;
-
-            this.pantalla.mostrarMensaje(mensaje);
-            window.location.href = "eventos.html";
-        } else {
-            this.pantalla.mostrarMensaje("Error: No hay sesión activa");
-            return;
-        }
+    // Finaliza el caso de uso
+    finCU() {
+        this.eventoSeleccionado = null;
+        return true;
     }
 }
 

@@ -1,6 +1,6 @@
 class Estado {
     constructor(ambito, nombreEstado) {
-        this.ambito = ambito;  //?????? QUE ES AMBITO
+        this.ambito = ambito;
         this.nombreEstado = nombreEstado;
     }
     esBloqueadoEnRevision() {
@@ -15,6 +15,9 @@ class Estado {
     }
     esAmbitoSismico() {
         return this.ambito === "Sismico";
+    }
+    esRechazado() {
+        return this.nombreEstado === "Rechazado";
     }
 }
 export default Estado;
