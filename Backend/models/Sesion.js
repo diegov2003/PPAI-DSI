@@ -1,12 +1,28 @@
 class Sesion {
-    constructor(fechaHoraDesde, fechaHoraHasta, usuario){
+    constructor(fechaHoraDesde, fechaHoraHasta, usuario) {
         this.fechaHoraDesde = fechaHoraDesde;
         this.fechaHoraHasta = fechaHoraHasta;
-        this.usuario = usuario; // 👈 esta es la instancia del usuario logueado
+        this.usuario = usuario;
     }
 
-    conocerUsuario(){
-        return this.usuario?.empleado;
+    getFechaHoraDesde() {
+        return this.fechaHoraDesde;
+    }
+
+    getFechaHoraHasta() {
+        return this.fechaHoraHasta;
+    }
+
+    getUsuario() {
+        return this.usuario;
+    }
+
+    setUsuario(usuario) {
+        this.usuario = usuario;
+    }
+
+    conocerUsuario() {
+        return this.getUsuario()?.getEmpleado();
     }
 }
 

@@ -6,12 +6,20 @@ class DetalleMuestraSismica {
         this.tipoDato = tipoDato;
     }
 
-    getDatos () {
+    getValor() {
+        return this.valor;
+    }
+
+    getTipoDato() {
+        return this.tipoDato;
+    }
+
+    getDatos() {
         return {
-            valor: this.valor,
-            tipoDato: this.tipoDato.getDenominacion(),
-            nombreUnidadMedida: this.tipoDato.nombreUnidadMedida,
-            valorUmbral: this.tipoDato.valorUmbral
+            valor: this.getValor(),
+            tipoDato: this.getTipoDato().getDenominacion(),
+            nombreUnidadMedida: this.getTipoDato().getNombreUnidadMedida(),
+            valorUmbral: this.getTipoDato().getValorUmbral()
         };
     }
 }

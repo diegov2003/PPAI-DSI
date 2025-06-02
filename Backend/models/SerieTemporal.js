@@ -5,14 +5,44 @@ class SerieTemporal {
         this.fechaHoraRegistro = fechaHoraRegistro;
         this.frecuenciaMuestreo = frecuenciaMuestreo;
         this.muestras = [];
+        this.estacion = null;
     }
+
+    getCondicionAlarma() {
+        return this.condicionAlarma;
+    }
+
+    getFechaHoraInicioRegistroMuestras() {
+        return this.fechaHoraInicioRegistroMuestras;
+    }
+
+    getFechaHoraRegistro() {
+        return this.fechaHoraRegistro;
+    }
+
+    getFrecuenciaMuestreo() {
+        return this.frecuenciaMuestreo;
+    }
+
+    getMuestras() {
+        return this.muestras;
+    }
+
+    getEstacion() {
+        return this.estacion;
+    }
+
+    setEstacion(estacion) {
+        this.estacion = estacion;
+    }
+
     getDatos() {
         return {
-            condicionAlarma: this.condicionAlarma,
-            fechaHoraInicioRegistroMuestras: this.fechaHoraInicioRegistroMuestras,
-            fechaHoraRegistro: this.fechaHoraRegistro,
-            frecuenciaMuestreo: this.frecuenciaMuestreo,
-            muestras: this.muestras
+            condicionAlarma: this.getCondicionAlarma(),
+            fechaHoraInicioRegistroMuestras: this.getFechaHoraInicioRegistroMuestras(),
+            fechaHoraRegistro: this.getFechaHoraRegistro(),
+            frecuenciaMuestreo: this.getFrecuenciaMuestreo(),
+            muestras: this.getMuestras()
         };
     }
 }

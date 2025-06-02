@@ -23,9 +23,25 @@ class EventoSismico {
         this.origenGeneracion = origenGeneracion;
     }
 
+    getIdEvento() {
+        return this.idEvento;
+    }
+
+    getEstado() {
+        return this.estado;
+    }
+
+    getSeriesTemporales() {
+        return this.seriesTemporales;
+    }
+
+    getCambiosDeEstado() {
+        return this.cambiosDeEstado;
+    }
+
     agregarCambioEstado(cambioEstado) {
         this.cambiosDeEstado.push(cambioEstado);
-        this.estado = cambioEstado.estado;
+        this.estado = cambioEstado.getEstado();
     }
 
     formatearFecha(fechaStr) {
@@ -90,15 +106,15 @@ class EventoSismico {
     }
 
     obtenerSeriesYMuestrasDeEvento() {
-        return this.seriesTemporales;
+        return this.getSeriesTemporales();
     }
 
     esAutodetectado() {
-        return this.estado.esAutoDetectado();
+        return this.getEstado().esAutoDetectado();
     }
 
     esRechazado() {
-        return this.estado.nombreEstado === "Rechazado";
+        return this.getEstado().getNombreEstado() === "Rechazado";
     }
 
     crearCambioEstadoBloqueadoEnRevision() {
@@ -110,24 +126,25 @@ class EventoSismico {
         const nuevoEstado = new Estado("Sismico", "Rechazado");
         return new CambioDeEstado(new Date().toISOString(), null, nuevoEstado);
     }
-
+    //Ahora usamos este metodo que llama a crearCambioEstadoRechazado para crear el nuevo cambio de estado
     rechazar() {
         const cambioEstado = this.crearCambioEstadoRechazado();
         this.agregarCambioEstado(cambioEstado);
     }
 
     esEstadoActual() {
-        return this.cambiosDeEstado.length > 0 && 
-               this.cambiosDeEstado[this.cambiosDeEstado.length - 1].esEstadoActual();
+        const cambiosDeEstado = this.getCambiosDeEstado();
+        return cambiosDeEstado.length > 0 && 
+               cambiosDeEstado[cambiosDeEstado.length - 1].esEstadoActual();
     }
 
     getEstadoActual() {
-        return this.estado;
+        return this.getEstado();
     }
 
     clasificarPorEstacionSismologica() {
-        return this.seriesTemporales.reduce((clasificadas, serie) => {
-            const nombreEstacion = serie.estacion?.getNombre() || 'Sin estación';
+        return this.getSeriesTemporales().reduce((clasificadas, serie) => {
+            const nombreEstacion = serie.getEstacion()?.getNombre() || 'Sin estación';
             if (!clasificadas[nombreEstacion]) {
                 clasificadas[nombreEstacion] = [];
             }

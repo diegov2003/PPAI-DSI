@@ -10,12 +10,25 @@ class GestorDeRevisionManual {
         this.eventosAutodetectados = [];
     }
 
+    getPantalla() {
+        return this.pantalla;
+    }
+
     setPantalla(pantalla) {
         this.pantalla = pantalla;
     }
 
+    getSesionActual() {
+        return this.sesionActual;
+    }
+
     setSesion(sesion) {
         this.sesionActual = sesion;
+        console.log("Sesión establecida:", this.sesionActual);
+    }
+
+    getEventoSeleccionado() {
+        return this.eventoSeleccionado;
     }
 
     // Método principal que inicia el caso de uso
@@ -29,34 +42,34 @@ class GestorDeRevisionManual {
     buscarEventosAutodetectado() {
         return Datos.eventos.filter(
             (evento) =>
-                evento.estado instanceof Estado &&
-                evento.estado.esAmbitoSismico() &&
-                evento.estado.esAutoDetectado()
+                evento.getEstado() instanceof Estado &&
+                evento.getEstado().esAmbitoSismico() &&
+                evento.getEstado().esAutoDetectado()
         );
     }
 
     // Obtiene los datos necesarios para mostrar de cada evento
     obtenerDatosDeEventos(eventos) {
         return eventos.map(evento => ({
-            id: evento.idEvento,
-            fechaHora: evento.fechaHoraOcurrencia,
-            magnitud: evento.valorMagnitud,
-            estado: evento.estado.nombreEstado
+            id: evento.getIdEvento(),
+            fechaHora: evento.getFechaHoraOcurrencia(),
+            magnitud: evento.getValorMagnitud(),
+            estado: evento.getEstado().getNombreEstado()
         }));
     }
 
     // Ordena los eventos por fecha y hora
     ordenarListadoDeEventosXFechaHora(eventos) {
         return eventos.sort((a, b) => 
-            new Date(b.fechaHoraOcurrencia) - new Date(a.fechaHoraOcurrencia)
+            new Date(a.getFechaHoraOcurrencia()) - new Date(b.getFechaHoraOcurrencia())
         );
     }
 
     // Maneja la selección de un evento específico
     seleccionarEvento(eventoId) {
-        const evento = Datos.eventos.find(e => e.idEvento === eventoId);
+        const evento = Datos.eventos.find(e => e.getIdEvento() === eventoId);
         if (!evento) {
-            this.pantalla.mostrarMensaje("Evento no encontrado");
+            this.getPantalla().mostrarMensaje("Evento no encontrado");
             return null;
         }
         this.eventoSeleccionado = evento;
@@ -66,24 +79,21 @@ class GestorDeRevisionManual {
 
     // Busca y aplica el estado "Bloqueado en revision"
     buscarBloqueadoEnRevision() {
-        const estadoBloqueado = Datos.estados.find(
-            e => e.esBloqueadoEnRevision() && e.esAmbitoSismico()
-        );
-        if (estadoBloqueado) {
-            if (this.eventoSeleccionado.cambiosDeEstado.length > 0) {
-                const estadoActual = this.eventoSeleccionado.cambiosDeEstado.find(ce => ce.esEstadoActual());
-                if (estadoActual) {
-                    estadoActual.setFechaHoraFin(this.obtenerFechaHoraActual());
-                }
+        const evento = this.getEventoSeleccionado();
+        if (!evento) return;
+
+        // Buscar el estado actual y finalizarlo
+        const cambiosDeEstado = evento.getCambiosDeEstado();
+        if (cambiosDeEstado.length > 0) {
+            const estadoActual = cambiosDeEstado.find(ce => ce.esEstadoActual());
+            if (estadoActual) {
+                estadoActual.setFechaHoraFin(this.obtenerFechaHoraActual());
             }
-            const nuevoCambioEstado = new CambioDeEstado(
-                this.obtenerFechaHoraActual(),
-                null,
-                estadoBloqueado
-            );
-            this.eventoSeleccionado.cambiosDeEstado.push(nuevoCambioEstado);
-            this.eventoSeleccionado.estado = estadoBloqueado;
         }
+
+        // Usar el método de Evento sismico para crear el estado bloqueado y no lo creamos directamente
+        const nuevoCambioEstado = evento.crearCambioEstadoBloqueadoEnRevision();
+        evento.agregarCambioEstado(nuevoCambioEstado);
     }
 
     // Obtiene la fecha y hora actual en formato ISO
@@ -93,48 +103,15 @@ class GestorDeRevisionManual {
 
     // Obtiene todos los datos relevantes del evento seleccionado
     buscarDatosDeEventoSismico() {
-        if (!this.eventoSeleccionado) return null;
-        return this.eventoSeleccionado;
+        if (!this.getEventoSeleccionado()) return null;
+        return this.getEventoSeleccionado();
     }
 
     // Obtiene y clasifica las series temporales del evento
     obtenerSeriesYMuestrasDeEvento() {
-        if (!this.eventoSeleccionado?.seriesTemporales) return [];
-        return this.clasificarPorEstacionSismologica(this.eventoSeleccionado.seriesTemporales);
-    }
-
-    // Clasifica las series temporales por estación y procesa sus detalles
-    clasificarPorEstacionSismologica(series) {
-        return series.map(serie => {
-            const datosCompletos = {
-                estacion: serie.estacion?.nombre || 'Sin estación',
-                fechaInicio: serie.fechaHoraInicioRegistroMuestras,
-                fechaFin: serie.fechaHoraRegistro,
-                frecuenciaMuestreo: serie.frecuenciaMuestreo,
-                muestras: serie.muestras.map(muestra => {
-                    const detallesPorTipo = {};
-                    muestra.detalles.forEach(detalle => {
-                        if (detalle && detalle.tipoDato) {
-                            detallesPorTipo[detalle.tipoDato.denominacion] = {
-                                valor: detalle.valor,
-                                unidad: detalle.tipoDato.nombreUnidadMedida
-                            };
-                        }
-                    });
-
-                    return {
-                        fechaHora: muestra.fechaHoraMuestra,
-                        velocidad: detallesPorTipo['Velocidad'] ? 
-                            `${detallesPorTipo['Velocidad'].valor} ${detallesPorTipo['Velocidad'].unidad}` : 'N/D',
-                        frecuencia: detallesPorTipo['Frecuencia'] ? 
-                            `${detallesPorTipo['Frecuencia'].valor} ${detallesPorTipo['Frecuencia'].unidad}` : 'N/D',
-                        longitud: detallesPorTipo['Longitud'] ? 
-                            `${detallesPorTipo['Longitud'].valor} ${detallesPorTipo['Longitud'].unidad}` : 'N/D'
-                    };
-                })
-            };
-            return datosCompletos;
-        });
+        const evento = this.getEventoSeleccionado();
+        if (!evento?.getSeriesTemporales()) return [];
+        return evento.clasificarPorEstacionSismologica();
     }
 
     // Genera el sismograma (simulado en esta implementación)
@@ -145,7 +122,7 @@ class GestorDeRevisionManual {
 
     // Muestra el botón para visualizar el sismograma
     mostrarBotonVisualizarSismograma() {
-        this.pantalla.mostrarBotonVisualizarSismograma();
+        this.getPantalla().mostrarBotonVisualizarSismograma();
     }
 
     // Maneja la decisión de no visualizar
@@ -160,57 +137,105 @@ class GestorDeRevisionManual {
 
     // Inicia el proceso de rechazo del evento
     tomarSeleccionRechazarEvento() {
-        if (this.validarDatosEvento()) {
-            const usuarioLogeado = this.buscarUsuarioLogeado();
-            if (usuarioLogeado) {
-                const estadoRechazado = this.buscarEstadoRechazado();
-                if (estadoRechazado) {
-                    this.rechazarEvento(estadoRechazado, usuarioLogeado);
-                }
-            }
+        if (!this.validarDatosEvento()) {
+            console.error("Datos del evento no válidos para rechazar");
+            return false;
         }
+
+        const usuarioLogeado = this.buscarUsuarioLogeado();
+        if (!usuarioLogeado) {
+            console.error("No hay usuario logueado");
+            return false;
+        }
+
+        const estadoRechazado = this.buscarEstadoRechazado();
+        if (!estadoRechazado) {
+            console.error("No se encontró el estado Rechazado");
+            return false;
+        }
+
+        this.rechazarEvento(estadoRechazado, usuarioLogeado);
+        return true;
     }
 
     // Valida que el evento tenga todos los datos necesarios
     validarDatosEvento() {
-        if (!this.eventoSeleccionado) return false;
-        return !!(
-            this.eventoSeleccionado.valorMagnitud &&
-            this.eventoSeleccionado.alcance &&
-            this.eventoSeleccionado.origenGeneracion
-        );
+        const evento = this.getEventoSeleccionado();
+        if (!evento) {
+            console.error("No hay evento seleccionado");
+            return false;
+        }
+
+        const datosRequeridos = [
+            evento.getValorMagnitud(),
+            evento.getAlcance(),
+            evento.getOrigen()
+        ];
+
+        const todosLosDatosPresentes = datosRequeridos.every(dato => dato !== null && dato !== undefined);
+        if (!todosLosDatosPresentes) {
+            console.error("Faltan datos requeridos del evento");
+            return false;
+        }
+
+        return true;
     }
 
     // Obtiene el usuario actualmente logueado
     buscarUsuarioLogeado() {
-        return this.sesionActual?.usuario;
+        const sesion = this.getSesionActual();
+        if (!sesion) {
+            console.error("No hay sesión activa");
+            return null;
+        }
+
+        const empleado = sesion.conocerUsuario();
+        if (!empleado) {
+            console.error("No hay empleado asociado a la sesión");
+            return null;
+        }
+
+        const usuario = empleado.getUsuario();
+        if (!usuario) {
+            console.error("No hay usuario asociado al empleado");
+            return null;
+        }
+
+        return usuario;
     }
 
     // Busca el estado "Rechazado" en el sistema
     buscarEstadoRechazado() {
         return Datos.estados.find(
-            e => e.nombreEstado === "Rechazado" && e.esAmbitoSismico()
+            e => e.getNombreEstado() === "Rechazado" && e.esAmbitoSismico()
         );
     }
 
     // Realiza el rechazo efectivo del evento
     rechazarEvento(estadoRechazado, usuarioLogeado) {
-        const estadoActual = this.eventoSeleccionado.cambiosDeEstado.find(
-            ce => ce.esEstadoActual()
-        );
+        const evento = this.getEventoSeleccionado();
+        if (!evento) return;
+
+        // Buscar el estado actual y finalizarlo
+        const cambiosDeEstado = evento.getCambiosDeEstado();
+        const estadoActual = cambiosDeEstado.find(ce => ce.esEstadoActual());
+        
         if (estadoActual) {
             estadoActual.setFechaHoraFin(this.obtenerFechaHoraActual());
         }
 
-        const nuevoCambioEstado = new CambioDeEstado(
-            this.obtenerFechaHoraActual(),
-            null,
-            estadoRechazado
-        );
-        nuevoCambioEstado.empleado = usuarioLogeado.empleado;
-        
-        this.eventoSeleccionado.cambiosDeEstado.push(nuevoCambioEstado);
-        this.eventoSeleccionado.estado = estadoRechazado;
+        // Usar el método de EventoSismico para rechazar el evento y no creamos el cambio de estado directamente
+        evento.rechazar();
+
+        // Asignar el empleado al último cambio de estado
+        const ultimoCambio = evento.getCambiosDeEstado()[evento.getCambiosDeEstado().length - 1];
+        ultimoCambio.setEmpleado(usuarioLogeado.getEmpleado());
+
+        console.log("Evento rechazado exitosamente:", {
+            id: evento.getIdEvento(),
+            nuevoEstado: evento.getEstado().getNombreEstado(),
+            empleado: usuarioLogeado.getEmpleado().getNombre()
+        });
     }
 
     // Finaliza el caso de uso

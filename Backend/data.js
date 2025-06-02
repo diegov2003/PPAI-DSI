@@ -241,19 +241,18 @@ estaciones.forEach((estacion, index) => {
 
 // 4. Configurar cambios de estado iniciales
 eventos.forEach((evento) => {
-    if (!evento.cambiosDeEstado || evento.cambiosDeEstado.length === 0) {
+    if (!evento.getCambiosDeEstado() || evento.getCambiosDeEstado().length === 0) {
         evento.cambiosDeEstado = [
             new CambioDeEstado(
-                evento.fechaHoraOcurrencia,
+                evento.getFechaHoraOcurrencia(),
                 null,
-                evento.estado
+                evento.getEstado()
             )
         ];
     }
 });
 
-cambiosEstado[0].empleado = empleados[0];
-cambiosEstado[0].evento = eventos[0];
+cambiosEstado[0].setEmpleado(empleados[0]);
 
 const data = {
     magnitudes,
@@ -274,8 +273,8 @@ const data = {
 console.log("Datos inicializados:");
 console.log("Series temporales:", data.seriesTemporales);
 console.log("Eventos con sus series:", data.eventos.map(e => ({
-    id: e.idEvento,
-    seriesCount: e.seriesTemporales.length
+    id: e.getIdEvento(),
+    seriesCount: e.getSeriesTemporales().length
 })));
 
 export default data;

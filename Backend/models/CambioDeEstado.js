@@ -5,14 +5,41 @@ class CambioDeEstado {
         this.estado = estado;
         this.empleado = null;
     }
-    esEstadoActual() {
-        return this.fechaHoraFin === null || this.fechaHoraFin === undefined;
+
+    getFechaHoraInicio() {
+        return this.fechaHoraInicio;
     }
+
+    getFechaHoraFin() {
+        return this.fechaHoraFin;
+    }
+
+    getEstado() {
+        return this.estado;
+    }
+
+    getEmpleado() {
+        return this.empleado;
+    }
+
+    setEmpleado(empleado) {
+        this.empleado = empleado;
+    }
+
+    esEstadoActual() {
+        return this.getFechaHoraFin() === null || this.getFechaHoraFin() === undefined;
+    }
+
     setFechaHoraFin(fechaHoraFin) {
         this.fechaHoraFin = fechaHoraFin;
     }
+
     new() {
-        return new CambioDeEstado(this.fechaHoraInicio, this.fechaHoraFin, this.estado);
+        return new CambioDeEstado(
+            this.getFechaHoraInicio(), 
+            this.getFechaHoraFin(), 
+            this.getEstado()
+        );
     }
 }
 export default CambioDeEstado;

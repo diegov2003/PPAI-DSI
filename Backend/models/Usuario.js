@@ -5,8 +5,24 @@ class Usuario {
         this.empleado = empleado;
     }
 
-    getRILogueado() {
+    getNombreUsuario() {
+        return this.nombreUsuario;
+    }
+
+    getContrasena() {
+        return this.contrasena;
+    }
+
+    getEmpleado() {
         return this.empleado;
+    }
+
+    setEmpleado(empleado) {
+        this.empleado = empleado;
+    }
+
+    getRILogueado() {
+        return this.getEmpleado();
     }
 }
 

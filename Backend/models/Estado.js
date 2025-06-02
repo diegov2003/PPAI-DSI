@@ -3,21 +3,33 @@ class Estado {
         this.ambito = ambito;
         this.nombreEstado = nombreEstado;
     }
+
+    getAmbito() {
+        return this.ambito;
+    }
+
+    getNombreEstado() {
+        return this.nombreEstado;
+    }
+
     esBloqueadoEnRevision() {
-        return this.nombreEstado === "Bloqueado en revision";
+        return this.getNombreEstado() === "Bloqueado en revision";
     }
 
     esAutoDetectado() {
-        return this.nombreEstado === "Auto detectado";
+        return this.getNombreEstado() === "Auto detectado";
     }
+
     esPendienteDeRevision() {
-        return this.nombreEstado === "Pendiente de revision";
+        return this.getNombreEstado() === "Pendiente de revision";
     }
+
     esAmbitoSismico() {
-        return this.ambito === "Sismico";
+        return this.getAmbito() === "Sismico";
     }
+
     esRechazado() {
-        return this.nombreEstado === "Rechazado";
+        return this.getNombreEstado() === "Rechazado";
     }
 }
 export default Estado;

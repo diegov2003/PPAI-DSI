@@ -4,10 +4,35 @@ class Empleado {
         this.nombre = nombre;
         this.mail = mail;
         this.telefono = telefono;
+        this.usuario = null;
+    }
+
+    getApellido() {
+        return this.apellido;
+    }
+
+    getNombre() {
+        return this.nombre;
+    }
+
+    getMail() {
+        return this.mail;
+    }
+
+    getTelefono() {
+        return this.telefono;
+    }
+
+    getUsuario() {
+        return this.usuario;
+    }
+
+    setUsuario(usuario) {
+        this.usuario = usuario;
     }
 
     esTuUsuario(usuario) {
-        return this === usuario.empleado;
+        return this === usuario.getEmpleado();
     }
 }
 

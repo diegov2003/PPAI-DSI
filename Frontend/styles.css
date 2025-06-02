@@ -284,13 +284,19 @@ h1, h2 {
 }
 
 #btn-visualizar-sismograma {
-    background-color: #28a745;
+    background-color: #2d7fd6;
     color: white;
-    transition: all 0.3s ease;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: bold;
+    transition: all 0.3s;
+    margin: 5px;
+    cursor: pointer;
 }
 
 #btn-visualizar-sismograma:hover {
-    background-color: #218838;
+    background-color: #1f518a;
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
