@@ -77,6 +77,12 @@ class GestorDeRevisionManual {
         return this.buscarDatosDeEventoSismico();
     }
 
+    buscarEstadoBloqueadoEnRevision() {
+        return Datos.estados.find(
+            e => e.getNombreEstado() === "Bloqueado en revision" && e.esAmbitoSismico()
+        );
+    }
+
     // Busca y aplica el estado "Bloqueado en revision"
     buscarBloqueadoEnRevision() {
         const evento = this.getEventoSeleccionado();

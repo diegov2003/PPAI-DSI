@@ -21,16 +21,12 @@ document.addEventListener("DOMContentLoaded", function () {
         "juan.perez@sismos.com",
         "123456789"
     );
-    console.log("DEBUG - Empleado creado:", empleadoPrueba);
 
     const usuarioPrueba = new Usuario("analista", "123456", empleadoPrueba);
-    console.log("DEBUG - Usuario creado:", usuarioPrueba);
-    
     // Asignar el usuario al empleado y viceversa
     empleadoPrueba.usuario = usuarioPrueba;
     usuarioPrueba.empleado = empleadoPrueba;
 
-    console.log("DEBUG - Después de asignar relaciones:");
     console.log("- Empleado:", empleadoPrueba);
     console.log("- Usuario:", usuarioPrueba);
     console.log("- Usuario del empleado:", empleadoPrueba.usuario);
@@ -42,7 +38,6 @@ document.addEventListener("DOMContentLoaded", function () {
         null, // fecha hora hasta (null porque está activa)
         usuarioPrueba
     );
-    console.log("DEBUG - Sesión creada:", sesionPrueba);
 
     // Configurar la relación entre pantalla y gestor
     pantalla.setGestor(gestor);
@@ -50,7 +45,6 @@ document.addEventListener("DOMContentLoaded", function () {
     
     // Establecer la sesión en el gestor
     gestor.setSesion(sesionPrueba);
-    console.log("DEBUG - Sesión establecida en el gestor:", gestor.sesionActual);
 
     // Verificar si estamos en la página de eventos
     if (window.location.pathname.includes("eventos.html")) {
